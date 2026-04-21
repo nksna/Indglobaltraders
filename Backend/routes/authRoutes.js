@@ -7,6 +7,7 @@ const { protect, generateToken } = require('../Auth/auth');
 // @POST /api/auth/register
 router.post('/register', asyncHandler(async (req, res) => {
   const { name, email, password, phone } = req.body;
+  
   if (!name || !email || !password) {
     return res.status(400).json({ success: false, message: 'Please provide name, email, and password' });
   }
