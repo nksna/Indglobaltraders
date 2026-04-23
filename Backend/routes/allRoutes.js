@@ -3,7 +3,7 @@ const express = require('express');
 const authRouter = express.Router();
 const asyncHandler = require('express-async-handler');
 const User = require('../models/user');
-const { protect, generateToken } = require('../auth/auth');
+const { protect, generateToken } = require('../Auth/auth');
 
 authRouter.post('/register', asyncHandler(async (req, res) => {
   const { name, email, password, phone } = req.body;
@@ -162,7 +162,7 @@ wishlistRouter.delete('/:id', asyncHandler(async (req, res) => {
 
 // ── ADMIN ROUTES ──────────────────────────────────────────────────
 const adminRouter = express.Router();
-const { adminOnly: isAdmin } = require('../auth/auth');
+const { adminOnly: isAdmin } = require('../Auth/auth');
 
 adminRouter.use(protect, isAdmin);
 

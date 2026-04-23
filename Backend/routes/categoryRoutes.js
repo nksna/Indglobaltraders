@@ -3,7 +3,7 @@ const router = express.Router();
 const asyncHandler = require('express-async-handler');
 const Category = require('../models/category');
 const Product = require('../models/product');
-const { protect, adminOnly } = require('../auth/auth');
+const { protect, adminOnly } = require('../Auth/auth');
 
 // @GET /api/categories — all active categories (public)
 router.get('/', asyncHandler(async (req, res) => {

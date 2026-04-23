@@ -1,5 +1,5 @@
 const adminRouter = express.Router();
-const { adminOnly: isAdmin } = require('../middleware/auth');
+const { adminOnly: isAdmin } = require('../Auth/auth');
  
 adminRouter.use(protect, isAdmin);
  

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/product');
-const { protect, adminOnly } = require('../auth/auth');
+const { protect, adminOnly } = require('../Auth/auth');
 
 // @GET /api/products
 router.get('/', asyncHandler(async (req, res) => {
