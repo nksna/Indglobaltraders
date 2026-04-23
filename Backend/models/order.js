@@ -1,64 +1,36 @@
 const mongoose = require('mongoose');
-
-const orderItemSchema = new mongoose.Schema({
-  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  name: String,
-  image: String,
-  price: Number,
-  unit: String,
-  quantity: { type: Number, required: true, min: 1 }
-});
-
 const orderSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     orderNumber: { type: String, unique: true },
-    items: [orderItemSchema],
+    items: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        name: String, icon: String, price: Number, unit: String, quantity: Number
+      }
+    ],
     shippingAddress: {
-      fullName: String,
-      phone: String,
-      addressLine1: String,
-      addressLine2: String,
-      city: String,
-      state: String,
-      pincode: String
+      fullName: String, phone: String,
+      addressLine1: String, addressLine2: String,
+      city: String, state: String, pincode: String
     },
-    paymentMethod: {
-      type: String,
-      enum: ['razorpay', 'cod'],
-      required: true
-    },
-    paymentResult: {
-      razorpay_order_id: String,
-      razorpay_payment_id: String,
-      razorpay_signature: String,
-      status: String
-    },
-    itemsPrice: { type: Number, required: true },
-    shippingPrice: { type: Number, required: true, default: 0 },
-    taxPrice: { type: Number, required: true, default: 0 },
-    totalPrice: { type: Number, required: true },
+    paymentMethod: { type: String, enum: ['razorpay', 'cod'], required: true },
+    paymentResult: { razorpay_order_id: String, razorpay_payment_id: String, razorpay_signature: String, status: String },
+    itemsPrice: Number, shippingPrice: Number, taxPrice: Number, totalPrice: Number,
     isPaid: { type: Boolean, default: false },
     paidAt: Date,
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
       default: 'pending'
     },
-    trackingHistory: [
-      {
-        status: String,
-        message: String,
-        timestamp: { type: Date, default: Date.now }
-      }
-    ],
+    trackingHistory: [{ status: String, message: String, timestamp: { type: Date, default: Date.now } }],
     estimatedDelivery: Date,
     notes: String
   },
   { timestamps: true }
 );
-
-// Generate order number before saving
+ 
 orderSchema.pre('save', async function (next) {
   if (!this.orderNumber) {
     const count = await mongoose.model('Order').countDocuments();
@@ -66,5 +38,4 @@ orderSchema.pre('save', async function (next) {
   }
   next();
 });
-
-module.exports = mongoose.model('Order', orderSchema);
+ module.exports = mongoose.model('Order', orderSchema);

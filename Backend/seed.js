@@ -1,99 +1,89 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
+const dotenv = require('dotenv');
 dotenv.config();
 
 const User = require('./models/user');
+const Category = require('./models/category');
 const Product = require('./models/product');
 
-const users = [
-  {
-    name: 'Admin User',
-    email: 'admin@indglobal.com',
-    password: 'admin123',
-    role: 'admin',
-    phone: '9000000000'
-  },
-  {
-    name: 'Priya Sharma',
-    email: 'priya@example.com',
-    password: 'user123',
-    role: 'user',
-    phone: '9876543210'
-  }
-];
-
-const products = [
-  // Rice & Grains
-  { name: 'Sona Masoori Rice', category: 'Rice & Grains', price: 65, mrp: 80, unit: '1 kg', stock: 200, isFeatured: true, brand: 'Farm Fresh', description: 'Premium quality Sona Masoori rice sourced directly from Andhra Pradesh farms. Light, fluffy, and perfect for everyday cooking.', sku: 'RG001', tags: ['rice', 'premium'] },
-  { name: 'Basmati Rice', category: 'Rice & Grains', price: 120, mrp: 150, unit: '1 kg', stock: 150, isFeatured: true, brand: 'Dawat', description: 'Long grain aromatic Basmati rice, aged for superior taste and fragrance. Ideal for biryanis and pulao.', sku: 'RG002', tags: ['basmati', 'premium', 'biryani'] },
-  { name: 'Wheat Dalia', category: 'Rice & Grains', price: 45, mrp: 60, unit: '500 g', stock: 100, brand: 'Nature\'s Best', description: 'Broken wheat dalia, high in fiber and great for porridge and upma.', sku: 'RG003', tags: ['healthy', 'breakfast'] },
-  { name: 'Jowar (Sorghum)', category: 'Rice & Grains', price: 55, mrp: 70, unit: '1 kg', stock: 80, brand: 'Farm Fresh', description: 'Traditional jowar millets, gluten-free and nutritious. Great for rotis and porridge.', sku: 'RG004', tags: ['millet', 'gluten-free'] },
-
-  // Dals & Pulses
-  { name: 'Toor Dal (Arhar)', category: 'Dals & Pulses', price: 140, mrp: 165, unit: '1 kg', stock: 180, isFeatured: true, brand: 'Farm Fresh', description: 'Premium quality toor dal, the backbone of Indian sambar and dal preparations. Rich in protein.', sku: 'DP001', tags: ['dal', 'protein'] },
-  { name: 'Moong Dal (Split)', category: 'Dals & Pulses', price: 110, mrp: 135, unit: '1 kg', stock: 120, brand: 'Nature\'s Best', description: 'Split yellow moong dal, easy to digest and rich in nutrients. Perfect for khichdi and soups.', sku: 'DP002', tags: ['dal', 'light', 'healthy'] },
-  { name: 'Chana Dal', category: 'Dals & Pulses', price: 95, mrp: 115, unit: '1 kg', stock: 90, brand: 'Farm Fresh', description: 'Bengal gram dal, nutty flavour and rich in fiber. Great for curries and snacks.', sku: 'DP003' },
-  { name: 'Masoor Dal (Red)', category: 'Dals & Pulses', price: 85, mrp: 100, unit: '1 kg', stock: 110, brand: 'Farm Fresh', description: 'Red lentils that cook quickly and are loaded with iron and folate.', sku: 'DP004' },
-
-  // Oils & Ghee
-  { name: 'Cold Pressed Groundnut Oil', category: 'Oils & Ghee', price: 280, mrp: 330, unit: '1 L', stock: 60, isFeatured: true, brand: 'Woodpress', description: 'Traditional cold-pressed groundnut oil, extracted without heat. Retains natural nutrients and rich flavour.', sku: 'OG001', tags: ['cold-pressed', 'natural'] },
-  { name: 'Pure Cow Ghee', category: 'Oils & Ghee', price: 550, mrp: 650, unit: '500 ml', stock: 45, isFeatured: true, brand: 'Amul', description: 'Pure desi cow ghee made from fresh cream. Rich in vitamins and perfect for Indian cooking and tempering.', sku: 'OG002', tags: ['ghee', 'premium', 'cow'] },
-  { name: 'Coconut Oil (Virgin)', category: 'Oils & Ghee', price: 320, mrp: 380, unit: '1 L', stock: 70, brand: 'Parachute', description: 'Cold-pressed virgin coconut oil with natural aroma. Ideal for South Indian cooking.', sku: 'OG003' },
-
-  // Spices & Masala
-  { name: 'Turmeric Powder (Haldi)', category: 'Spices & Masala', price: 75, mrp: 90, unit: '200 g', stock: 200, isFeatured: true, brand: 'Everest', description: 'Pure turmeric powder with high curcumin content. Anti-inflammatory and essential for all Indian curries.', sku: 'SM001', tags: ['spice', 'healthy', 'turmeric'] },
-  { name: 'Red Chilli Powder', category: 'Spices & Masala', price: 85, mrp: 100, unit: '200 g', stock: 180, brand: 'MDH', description: 'Premium Kashmiri red chilli powder for vibrant colour and moderate heat.', sku: 'SM002' },
-  { name: 'Garam Masala', category: 'Spices & Masala', price: 95, mrp: 115, unit: '100 g', stock: 150, brand: 'Everest', description: 'Aromatic blend of whole spices. The secret to restaurant-style curries at home.', sku: 'SM003', tags: ['blend', 'aromatic'] },
-  { name: 'Cumin Seeds (Jeera)', category: 'Spices & Masala', price: 65, mrp: 80, unit: '100 g', stock: 200, brand: 'Farm Fresh', description: 'Whole cumin seeds, earthy and warm. Essential for tempering and flavouring dals.', sku: 'SM004' },
-
-  // Flour & Atta
-  { name: 'Whole Wheat Atta', category: 'Flour & Atta', price: 55, mrp: 65, unit: '1 kg', stock: 250, isFeatured: true, brand: 'Aashirvaad', description: 'Stone-ground whole wheat flour for soft and nutritious rotis. 100% whole wheat with no maida.', sku: 'FA001', tags: ['atta', 'whole wheat', 'healthy'] },
-  { name: 'Besan (Chickpea Flour)', category: 'Flour & Atta', price: 70, mrp: 85, unit: '1 kg', stock: 120, brand: 'Nature\'s Best', description: 'Fine ground chickpea flour, protein-rich and versatile for kadhi, pakoras, and sweets.', sku: 'FA002' },
-  { name: 'Rice Flour', category: 'Flour & Atta', price: 45, mrp: 55, unit: '1 kg', stock: 100, brand: 'Farm Fresh', description: 'Fine rice flour for making idiyappam, puttu, and crispy batters.', sku: 'FA003' },
-
-  // Sugar & Salt
-  { name: 'Raw Cane Sugar (Jaggery Powder)', category: 'Sugar & Salt', price: 90, mrp: 110, unit: '1 kg', stock: 130, isFeatured: true, brand: 'Organic India', description: 'Unrefined cane sugar with molasses intact. Natural sweetener retaining minerals.', sku: 'SS001', tags: ['natural', 'unrefined', 'healthy'] },
-  { name: 'Himalayan Pink Salt', category: 'Sugar & Salt', price: 55, mrp: 70, unit: '1 kg', stock: 150, brand: 'Tata', description: 'Pure Himalayan rock salt, mineral-rich and with a milder taste than regular salt.', sku: 'SS002', tags: ['himalayan', 'mineral'] },
-
-  // Snacks
-  { name: 'Roasted Chana', category: 'Snacks', price: 60, mrp: 75, unit: '250 g', stock: 100, isFeatured: true, brand: 'Farm Fresh', description: 'Crunchy roasted Bengal gram, a protein-packed healthy snack. Lightly salted and satisfying.', sku: 'SN001', tags: ['healthy', 'snack', 'protein'] },
-  { name: 'Murukku (Rice Crackers)', category: 'Snacks', price: 80, mrp: 100, unit: '200 g', stock: 80, brand: 'Haldirams', description: 'Traditional South Indian rice flour murukku, crispy and perfectly spiced.', sku: 'SN002' },
-  { name: 'Trail Mix (Nuts & Seeds)', category: 'Snacks', price: 180, mrp: 220, unit: '250 g', stock: 50, brand: 'Nature\'s Best', description: 'Premium mix of almonds, cashews, pumpkin seeds and raisins. Energy-boosting snack.', sku: 'SN003', tags: ['nuts', 'premium', 'healthy'] },
-
-  // Tea & Coffee
-  { name: 'Assam CTC Tea', category: 'Tea & Coffee', price: 180, mrp: 220, unit: '500 g', stock: 80, isFeatured: true, brand: 'Tata Tea', description: 'Bold, malty Assam CTC tea for a strong morning brew. Rich colour and full-bodied flavour.', sku: 'TC001', tags: ['tea', 'assam', 'morning'] },
-  { name: 'Filter Coffee Powder', category: 'Tea & Coffee', price: 220, mrp: 270, unit: '250 g', stock: 60, isFeatured: true, brand: 'Cothas', description: 'Authentic South Indian filter coffee blend — 80% coffee, 20% chicory. Perfect with a steel davara.', sku: 'TC002', tags: ['coffee', 'south indian', 'filter'] },
-  { name: 'Green Tea (Tulsi Ginger)', category: 'Tea & Coffee', price: 150, mrp: 185, unit: '25 bags', stock: 90, brand: 'Organic India', description: 'Refreshing green tea with tulsi and ginger. Antioxidant-rich and great for immunity.', sku: 'TC003', tags: ['green tea', 'healthy', 'organic'] }
+const categories = [
+  { name: 'Groceries & Food', icon: '🛒', color: '#16a34a', description: 'Fresh farm produce, pantry staples & daily essentials', sortOrder: 1 },
+  { name: 'Dress & Fashion', icon: '👗', color: '#db2777', description: 'Trendy clothing, ethnic wear & accessories for all', sortOrder: 2 },
+  { name: 'Gifts & Occasions', icon: '🎁', color: '#9333ea', description: 'Curated gift hampers, decor & celebration essentials', sortOrder: 3 },
+  { name: 'Home & Kitchen', icon: '🏠', color: '#ea580c', description: 'Cookware, appliances & home décor', sortOrder: 4 },
+  { name: 'Health & Beauty', icon: '💄', color: '#e11d48', description: 'Skincare, wellness & personal care products', sortOrder: 5 },
+  { name: 'Electronics', icon: '📱', color: '#2563eb', description: 'Gadgets, accessories & smart devices', sortOrder: 6 },
 ];
 
 async function seed() {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ Connected to MongoDB');
+  await mongoose.connect(process.env.MONGO_URI);
+  console.log('✅ Connected');
 
-    await User.deleteMany({});
-    await Product.deleteMany({});
+  await User.deleteMany({});
+  await Category.deleteMany({});
+  await Product.deleteMany({});
 
-    // Hash passwords and insert users
-    const hashedUsers = await Promise.all(
-      users.map(async (u) => ({ ...u, password: await bcrypt.hash(u.password, 10) }))
-    );
-    await User.insertMany(hashedUsers);
-    console.log(`✅ Seeded ${hashedUsers.length} users`);
+  // Users
+  await User.insertMany([
+    { name: 'Admin User', email: 'admin@indglobal.com', password: await bcrypt.hash('admin123', 10), role: 'admin', phone: '9000000000' },
+    { name: 'Priya Sharma', email: 'priya@example.com', password: await bcrypt.hash('user123', 10), role: 'user', phone: '9876543210' }
+  ]);
+  console.log('✅ Users seeded');
 
-    await Product.insertMany(products);
-    console.log(`✅ Seeded ${products.length} products`);
+  // Categories
+  const cats = await Category.insertMany(categories);
+  const catMap = {};
+  cats.forEach(c => { catMap[c.name] = c._id; });
+  console.log('✅ Categories seeded');
 
-    console.log('\n🎉 Seed complete!\n');
-    console.log('Admin login: admin@indglobal.com / admin123');
-    console.log('User login:  priya@example.com / user123');
+  // Products
+  const products = [
+    // Groceries & Food
+    { name: 'Sona Masoori Rice', category: catMap['Groceries & Food'], price: 65, mrp: 80, unit: '1 kg', stock: 200, icon: '🌾', isFeatured: true, brand: 'Farm Fresh', description: 'Premium quality rice from Andhra Pradesh farms', tags: ['rice', 'staple'] },
+    { name: 'Toor Dal', category: catMap['Groceries & Food'], price: 140, mrp: 165, unit: '1 kg', stock: 180, icon: '🫘', isFeatured: true, brand: 'Farm Fresh', description: 'Protein-rich toor dal, essential for sambar & dal', tags: ['dal', 'protein'] },
+    { name: 'Pure Cow Ghee', category: catMap['Groceries & Food'], price: 550, mrp: 650, unit: '500 ml', stock: 45, icon: '🫙', isFeatured: true, brand: 'Amul', description: 'Pure desi cow ghee, rich in vitamins', tags: ['ghee', 'premium'] },
+    { name: 'Turmeric Powder', category: catMap['Groceries & Food'], price: 75, mrp: 90, unit: '200 g', stock: 200, icon: '🌶️', brand: 'Everest', description: 'Pure turmeric with high curcumin content', tags: ['spice', 'healthy'] },
+    { name: 'Whole Wheat Atta', category: catMap['Groceries & Food'], price: 55, mrp: 65, unit: '1 kg', stock: 250, icon: '🌾', isFeatured: true, brand: 'Aashirvaad', description: 'Stone-ground whole wheat flour for soft rotis', tags: ['atta', 'healthy'] },
+    { name: 'Filter Coffee Powder', category: catMap['Groceries & Food'], price: 220, mrp: 270, unit: '250 g', stock: 60, icon: '☕', isFeatured: true, brand: 'Cothas', description: 'Authentic South Indian filter coffee blend 80:20', tags: ['coffee', 'beverage'] },
 
-    process.exit(0);
-  } catch (err) {
-    console.error('❌ Seed error:', err);
-    process.exit(1);
-  }
+    // Dress & Fashion
+    { name: 'Silk Saree (Kanjivaram)', category: catMap['Dress & Fashion'], price: 4500, mrp: 6000, unit: '1 piece', stock: 15, icon: '👘', isFeatured: true, brand: 'Nalli', description: 'Authentic Kanjivaram silk saree with zari border, perfect for weddings and festivals', tags: ['saree', 'silk', 'ethnic', 'wedding'] },
+    { name: 'Cotton Kurta Set', category: catMap['Dress & Fashion'], price: 899, mrp: 1299, unit: 'M/L/XL/XXL', stock: 50, icon: '👕', isFeatured: true, brand: 'FabIndia', description: 'Pure cotton kurta with matching pyjama, comfortable for daily wear', tags: ['kurta', 'cotton', 'ethnic', 'men'] },
+    { name: 'Anarkali Suit', category: catMap['Dress & Fashion'], price: 1799, mrp: 2499, unit: 'S/M/L/XL', stock: 30, icon: '👗', isFeatured: true, brand: 'Utsav Fashion', description: 'Embroidered Anarkali suit with dupatta, ideal for festive occasions', tags: ['anarkali', 'ethnic', 'women', 'festive'] },
+    { name: 'Sports T-Shirt', category: catMap['Dress & Fashion'], price: 499, mrp: 799, unit: 'S/M/L/XL', stock: 80, icon: '👕', brand: 'Puma', description: 'Dry-fit moisture wicking sports t-shirt', tags: ['sports', 'tshirt', 'men'] },
+    { name: 'Handloom Dupatta', category: catMap['Dress & Fashion'], price: 649, mrp: 899, unit: '1 piece', stock: 40, icon: '🧣', brand: 'Handloom House', description: 'Hand-woven cotton dupatta with block print', tags: ['dupatta', 'handloom', 'women'] },
+    { name: 'Leather Sandals', category: catMap['Dress & Fashion'], price: 1299, mrp: 1799, unit: '6/7/8/9/10', stock: 25, icon: '👡', brand: 'Bata', description: 'Genuine leather flat sandals with cushioned sole', tags: ['sandals', 'leather', 'footwear'] },
+
+    // Gifts & Occasions
+    { name: 'Diwali Gift Hamper', category: catMap['Gifts & Occasions'], price: 1499, mrp: 1999, unit: '1 set', stock: 20, icon: '🎁', isFeatured: true, brand: 'INDGLOBAL', description: 'Premium Diwali hamper with dry fruits, sweets, diyas & chocolates', tags: ['diwali', 'hamper', 'festival', 'gift'] },
+    { name: 'Scented Candle Set', category: catMap['Gifts & Occasions'], price: 599, mrp: 799, unit: 'Set of 3', stock: 45, icon: '🕯️', brand: 'Aromafresh', description: 'Hand-poured soy wax candles with jasmine & rose fragrances', tags: ['candle', 'fragrance', 'gift'] },
+    { name: 'Personalised Photo Frame', category: catMap['Gifts & Occasions'], price: 399, mrp: 599, unit: '1 piece', stock: 60, icon: '🖼️', isFeatured: true, brand: 'PrintKaro', description: 'Customisable wooden photo frame, perfect for birthdays and anniversaries', tags: ['photo', 'personalised', 'birthday'] },
+    { name: 'Rakhi Gift Box', category: catMap['Gifts & Occasions'], price: 799, mrp: 999, unit: '1 set', stock: 35, icon: '🎀', brand: 'INDGLOBAL', description: 'Designer Rakhi with chocolates and dry fruits in a premium box', tags: ['rakhi', 'festival', 'gift'] },
+    { name: 'Brass Puja Thali Set', category: catMap['Gifts & Occasions'], price: 899, mrp: 1299, unit: '1 set', stock: 25, icon: '🪔', isFeatured: true, brand: 'Traditional Arts', description: 'Handcrafted brass thali with diya, kalash, and incense holder', tags: ['puja', 'brass', 'traditional', 'gift'] },
+
+    // Home & Kitchen
+    { name: 'Stainless Steel Tawa', category: catMap['Home & Kitchen'], price: 499, mrp: 699, unit: '1 piece', stock: 40, icon: '🍳', brand: 'Prestige', description: 'Heavy gauge stainless steel tawa, induction compatible', tags: ['cookware', 'tawa', 'kitchen'] },
+    { name: 'Earthen Clay Pot', category: catMap['Home & Kitchen'], price: 299, mrp: 399, unit: '2L capacity', stock: 30, icon: '🫙', isFeatured: true, brand: 'Clay Craft', description: 'Traditional clay pot for water storage and cooking, keeps water naturally cool', tags: ['clay', 'traditional', 'home'] },
+    { name: 'Bamboo Serving Set', category: catMap['Home & Kitchen'], price: 749, mrp: 999, unit: 'Set of 4', stock: 20, icon: '🥄', brand: 'Eco Living', description: 'Eco-friendly bamboo spoon and spatula set', tags: ['bamboo', 'eco', 'kitchen'] },
+
+    // Health & Beauty
+    { name: 'Kumkumadi Face Oil', category: catMap['Health & Beauty'], price: 799, mrp: 1099, unit: '30 ml', stock: 35, icon: '✨', isFeatured: true, brand: 'Forest Essentials', description: 'Traditional Ayurvedic facial oil for glowing skin, with saffron and herbs', tags: ['skincare', 'ayurvedic', 'face'] },
+    { name: 'Neem Tulsi Soap', category: catMap['Health & Beauty'], price: 99, mrp: 130, unit: 'Pack of 3', stock: 100, icon: '🧼', brand: 'Khadi Natural', description: 'Handmade neem and tulsi soap for antibacterial skin care', tags: ['soap', 'natural', 'herbal'] },
+    { name: 'Rose Water Toner', category: catMap['Health & Beauty'], price: 199, mrp: 275, unit: '200 ml', stock: 60, icon: '🌹', brand: 'Biotique', description: 'Pure distilled rose water toner for hydrated, radiant skin', tags: ['toner', 'rose', 'skincare'] },
+
+    // Electronics
+    { name: 'Wireless Earbuds', category: catMap['Electronics'], price: 1499, mrp: 2499, unit: '1 pair', stock: 30, icon: '🎧', isFeatured: true, brand: 'boAt', description: 'True wireless earbuds with 24hr battery, IPX5 water resistance', tags: ['audio', 'wireless', 'earbuds'] },
+    { name: 'USB-C Fast Charger', category: catMap['Electronics'], price: 699, mrp: 999, unit: '1 piece', stock: 50, icon: '🔌', brand: 'Ambrane', description: '65W GaN fast charger compatible with all USB-C devices', tags: ['charger', 'fast', 'usb-c'] },
+    { name: 'Smart LED Bulb', category: catMap['Electronics'], price: 349, mrp: 499, unit: 'Pack of 2', stock: 40, icon: '💡', isFeatured: true, brand: 'Syska', description: 'WiFi smart LED bulbs, 16M colours, voice control compatible', tags: ['smart', 'led', 'home'] },
+  ];
+
+  await Product.insertMany(products);
+  console.log(`✅ ${products.length} products seeded across ${cats.length} categories`);
+  console.log('\n🎉 Seed complete!');
+  console.log('Admin: admin@indglobal.com / admin123');
+  console.log('User:  priya@example.com / user123');
+  process.exit(0);
 }
 
-seed();
+seed().catch(err => { console.error(err); process.exit(1); });

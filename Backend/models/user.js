@@ -2,13 +2,9 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const addressSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
-  phone: { type: String, required: true },
-  addressLine1: { type: String, required: true },
-  addressLine2: String,
-  city: { type: String, required: true },
-  state: { type: String, required: true },
-  pincode: { type: String, required: true },
+  fullName: String, phone: String,
+  addressLine1: String, addressLine2: String,
+  city: String, state: String, pincode: String,
   isDefault: { type: Boolean, default: false }
 });
 
@@ -16,7 +12,7 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
-    phone: { type: String, trim: true },
+    phone: String,
     password: { type: String, required: true, minlength: 6 },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     addresses: [addressSchema],
@@ -25,17 +21,14 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// Compare entered password
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.matchPassword = async function (p) {
+  return bcrypt.compare(p, this.password);
 };
 
 module.exports = mongoose.model('User', userSchema);

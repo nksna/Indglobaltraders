@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const reviewSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    name: { type: String, required: true },
+    name: String,
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String, required: true }
   },
@@ -14,34 +14,27 @@ const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     description: { type: String, required: true },
-    category: {
-      type: String,
-      required: true,
-      enum: [
-        'Rice & Grains', 'Dals & Pulses', 'Oils & Ghee',
-        'Spices & Masala', 'Flour & Atta', 'Sugar & Salt',
-        'Snacks', 'Tea & Coffee', 'Beverages', 'Dairy & Eggs'
-      ]
-    },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
     price: { type: Number, required: true, min: 0 },
     mrp: { type: Number, required: true },
-    discount: { type: Number, default: 0 }, // percentage
-    unit: { type: String, required: true }, // e.g. "1 kg", "500 g", "1 L"
+    discount: { type: Number, default: 0 },
+    unit: { type: String, required: true },       // "1 kg", "M/L/XL", "1 piece"
     stock: { type: Number, required: true, default: 0 },
     images: [{ type: String }],
-    brand: { type: String },
+    icon: { type: String, default: '🛍️' },        // emoji fallback
+    brand: String,
     tags: [String],
+    attributes: { type: Map, of: String },         // flexible: { size, color, material, flavour… }
     isFeatured: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     reviews: [reviewSchema],
     rating: { type: Number, default: 0 },
     numReviews: { type: Number, default: 0 },
-    sku: { type: String, unique: true }
+    sku: { type: String, sparse: true }   // no unique index — avoids null collision
   },
   { timestamps: true }
 );
 
-// Auto-calculate discount
 productSchema.pre('save', function (next) {
   if (this.mrp && this.price) {
     this.discount = Math.round(((this.mrp - this.price) / this.mrp) * 100);
@@ -49,4 +42,4 @@ productSchema.pre('save', function (next) {
   next();
 });
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);
