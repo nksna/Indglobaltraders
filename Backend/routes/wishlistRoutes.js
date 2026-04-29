@@ -1,5 +1,5 @@
 const wishlistRouter = express.Router();
-const { Wishlist } = require('../models/Commerce');
+const { Wishlist } = require('../models/wishlist');
  
 wishlistRouter.use(protect);
  

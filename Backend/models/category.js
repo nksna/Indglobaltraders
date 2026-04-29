@@ -2,23 +2,24 @@ const mongoose = require('mongoose');
 
 const categorySchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, unique: true, trim: true },
-    slug: { type: String, required: true, unique: true, lowercase: true },
-    icon: { type: String, default: '🛍️' },        // emoji icon
-    color: { type: String, default: '#6366f1' },   // accent color for this dept
+    name:        { type: String, required: true, unique: true, trim: true },
+    slug:        { type: String, unique: true, lowercase: true },
+    icon:        { type: String, default: '🛍️' },
+    color:       { type: String, default: '#7c3aed' },
     description: { type: String, default: '' },
-    image: { type: String, default: '' },
-    isActive: { type: Boolean, default: true },
-    sortOrder: { type: Number, default: 0 },
-    parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null } // sub-category support
+    isActive:    { type: Boolean, default: true },
+    sortOrder:   { type: Number, default: 0 }
   },
   { timestamps: true }
 );
 
-// Auto-generate slug
+// Auto-generate slug from name
 categorySchema.pre('validate', function (next) {
   if (this.name && !this.slug) {
-    this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    this.slug = this.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
   }
   next();
 });
